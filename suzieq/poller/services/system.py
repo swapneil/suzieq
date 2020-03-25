@@ -14,9 +14,9 @@ class SystemService(Service):
     nodes_state = {}
 
     def __init__(self, name, defn, period, stype, keys, ignore_fields,
-                 schema, queue, run_once):
+                 schema, write_queue, run_once):
         super().__init__(name, defn, period, stype, keys, ignore_fields,
-                         schema, queue, run_once)
+                         schema, write_queue, run_once)
         self.ignore_fields.append("bootupTimestamp")
 
     def clean_data(self, processed_data, raw_data):
@@ -55,6 +55,7 @@ class SystemService(Service):
     async def commit_data(self, result, namespace, hostname):
         """system svc needs to write out a record that indicates dead node"""
         nodeobj = self.nodes.get(hostname, None)
+
         if not nodeobj:
             # This will be the case when a node switches from init state
             # to good after nodes have been built. Find the corresponding

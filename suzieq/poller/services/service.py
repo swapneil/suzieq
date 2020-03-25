@@ -20,11 +20,11 @@ HOLD_TIME_IN_MSECS = 60000  # How long b4 declaring node dead
 class Service(object):
 
     def __init__(self, name, defn, period, stype, keys, ignore_fields, schema,
-                 queue, run_once="forever"):
+                 write_queue, run_once="forever"):
         self.name = name
         self.defn = defn
         self.ignore_fields = ignore_fields or []
-        self.queue = queue
+        self.write_queue = write_queue
         self.keys = keys
         self.schema = schema
         self.period = period
@@ -36,6 +36,9 @@ class Service(object):
         self.rebuild_nodelist = False  # used only when a node gets init
         self.nodes = {}
         self.new_nodes = {}
+        self.post_commands = []
+        self._node_queue = None
+        self.previous_results = {}
 
         # Add the hidden fields to ignore_fields
         self.ignore_fields.append("timestamp")
@@ -51,10 +54,12 @@ class Service(object):
         else:
             self.partition_cols = self.keys + ["timestamp"]
 
+        self._init_node_queue()
+
     def get_data(self):
         """provide the data that is interesting for a service
 
-        does not include queue or schema"""
+        does not include write_queue or schema"""
 
         r = {}
         for field in 'name defn ignore_fields keys period stype partition_cols'.split(' '):
@@ -68,11 +73,11 @@ class Service(object):
 
     def set_nodes(self, nodes):
         """New node list for this service"""
-        if self.nodes:
-            self.new_nodes = copy.deepcopy(nodes)
-            self.update_nodes = True
-        else:
-            self.nodes = copy.deepcopy(nodes)
+        # TODO: does this need to do something different if the nodelist changes?
+        self.nodes = nodes
+        for node in nodes.values():
+            self.previous_results[node.hostname] = {}
+            self.post_commands.append(node.post_commands)
 
     def get_empty_record(self):
         map_defaults = {
@@ -210,16 +215,30 @@ class Service(object):
 
         return result
 
+    def _init_node_queue(self):
+        if not self._node_queue:
+            self._node_queue = asyncio.Queue()
+
+    async def post_results(self, results):
+        await self._node_queue.put(results)
+
+    async def schedule_commands(self):
+        """ these are the commands that we want to be run on nodes """
+        random.shuffle(self.post_commands)
+        [await command(self.post_results, self.defn) for command in self.post_commands]
+
     async def gather_data(self):
         """Collect data invoking the appropriate get routine from nodes."""
+        outputs = []
         now = time.time()
-        random.shuffle(self.nodelist)
-        tasks = [self.nodes[key].exec_service(self.defn)
-                 for key in self.nodelist]
+        count = self._node_queue.qsize()
 
-        outputs = await asyncio.gather(*tasks)
-        self.logger.info(
-            f"gathered for {self.name} took {time.time() - now} seconds")
+        while count > 0:
+            outputs.append(await self._node_queue.get())
+            count -= 1
+
+        if len(outputs) > 0:
+            self.logger.info(f"gathered {len(outputs)} for {self.name}")
         return outputs
 
     def process_data(self, data):
@@ -338,32 +357,13 @@ class Service(object):
     async def commit_data(self, result, namespace, hostname):
         """Write the result data out"""
         records = []
-        nodeobj = self.nodes.get(hostname, None)
-        if not nodeobj:
-            # This will be the case when a node switches from init state
-            # to good after nodes have been built. Find the corresponding
-            # node and fix the nodelist
-            nres = [
-                self.nodes[x] for x in self.nodes
-                if self.nodes[x].hostname == hostname
-            ]
-            if nres:
-                nodeobj = nres[0]
-                prev_res = nodeobj.prev_result
-                self.rebuild_nodelist = True
-            else:
-                logging.error(
-                    "Ignoring results for {} which is not in "
-                    "nodelist for service {}".format(hostname, self.name)
-                )
-                return
-        else:
-            prev_res = nodeobj.prev_result
+        prev_res = self.previous_results.get(hostname, None)
 
         if result or prev_res:
             adds, dels = self.get_diff(prev_res, result)
+
             if adds or dels:
-                nodeobj.prev_result = copy.deepcopy(result)
+                self.previous_results[hostname] = result
                 for entry in adds:
                     records.append(entry)
                 for entry in dels:
@@ -378,7 +378,7 @@ class Service(object):
                         records.append(entry)
 
             if records:
-                self.queue.put_nowait(
+                self.write_queue.put_nowait(
                     {
                         "records": records,
                         "topic": self.name,
@@ -387,12 +387,21 @@ class Service(object):
                     }
                 )
 
+    async def schedule(self):
+        """This schedules the commands to run"""
+        self.logger.info(f"starting service {self.name}")
+        while True:
+            await self.schedule_commands()
+            await asyncio.sleep(self.period + (random.randint(0, 1000) / 1000))
+
     async def run(self):
         """Start the service"""
         self.logger.info(f"running service {self.name} ")
         self.nodelist = list(self.nodes.keys())
 
         while True:
+            # TODO: the first data is now 15 seconds late, because we don't wait to run
+            #   the commands until they are gathered, so this gather after schedule happens too fast
 
             outputs = await self.gather_data()
             if self.run_once == "gather":
@@ -420,37 +429,5 @@ class Service(object):
                 print(self._dump_output(poutputs))
                 sys.exit(0)
 
-            if self.update_nodes:
-                for node in self.new_nodes:
-                    # Copy the last saved outputs to avoid committing dup data
-                    if node in self.nodes:
-                        self.new_nodes[node].prev_result = copy.deepcopy(
-                            self.nodes[node].prev_result
-                        )
+            await asyncio.sleep(1 + (random.randint(0, 1000) / 1000))
 
-                self.nodes = self.new_nodes
-                self.nodelist = list(self.nodes.keys())
-                self.new_nodes = {}
-                self.update_nodes = False
-                self.rebuild_nodelist = False
-
-            elif self.rebuild_nodelist:
-                adds = {}
-                dels = []
-                for host in self.nodes:
-                    if self.nodes[host].hostname != host:
-                        adds.update({self.nodes[host].hostname:
-                                     self.nodes[host]})
-                        dels.append(host)
-
-                if dels:
-                    for entry in dels:
-                        self.nodes.pop(entry, None)
-
-                if adds:
-                    self.nodes.update(adds)
-
-                self.nodelist = list(self.nodes.keys())
-                self.rebuild_nodelist = False
-
-            await asyncio.sleep(self.period + (random.randint(0, 1000) / 1000))
