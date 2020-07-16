@@ -21,6 +21,7 @@ cyberpandas = {git = "https://github.com/ddutt/cyberpandas.git"}
 uvloop = "*"
 networkx = "^2.4"
 matplotlib = "^3.2.2"
+faker = "^4.1.1"
 
 [tool.poetry.dev-dependencies]
 pylint = "*"
