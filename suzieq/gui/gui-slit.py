@@ -78,7 +78,7 @@ def sidebar(table_values):
     #    value='default')
     columns = st.sidebar.multiselect('View columns',
                                      ['default', 'all'] + fields.name.tolist(),
-                                     default='default'
+                                     default=['default'],
                                      )
     filter = st.sidebar.text_input(
         'Filter results with pandas query', value='')
@@ -89,6 +89,7 @@ def sidebar(table_values):
         columns = '*'
 
     return table, view, filter, columns
+
 
 def _main():
 
@@ -107,7 +108,7 @@ def _main():
         'routes': routes.RoutesObj
     }
 
-    (table, view, filter, columns) = sidebar(sqobj.keys())
+    (table, view, filter, columns) = sidebar([*sqobj.keys()])
     df = get_df(sqobj[table], view=view, columns=columns)
 
     if not df.empty:
