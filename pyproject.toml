@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "suzieq"
-version = "0.2.0"
+version = "0.3.0"
 description = ""
 authors = ["Dinesh G Dutt", "Justin Pietsch"]
 
@@ -22,6 +22,7 @@ uvloop = "*"
 networkx = "^2.4"
 matplotlib = "^3.2.2"
 faker = "^4.1.1"
+netconan = "^0.11.2"
 
 [tool.poetry.dev-dependencies]
 pylint = "*"
