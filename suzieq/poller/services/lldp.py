@@ -9,7 +9,7 @@ class LldpService(Service):
         """The MAC table in Linux can have weird keys"""
         return ['ifname', 'peerHostname', 'peerIfname']
 
-    def clean_data(self, processed_data, raw_data):
+    def _common_data_cleaner(self, processed_data, raw_data):
 
         devtype = self._get_devtype_from_input(raw_data)
 
@@ -37,7 +37,7 @@ class LldpService(Service):
                     r'^Eth?(\d)', 'Ethernet\g<1>', entry['ifname'])
                 entry['origIfname'] = re.sub(
                     r'^Eth?(\d)', 'Ethernet\g<1>', entry['origIfname'])
-            elif any(devtype == x for x in ['cumulus', 'linux', 'eos']):
+            elif any(devtype == x for x in ['linux', 'eos']):
                 entry['origIfname'] = entry['ifname']
 
-        return super().clean_data(processed_data, raw_data)
+        return processed_data

@@ -46,7 +46,7 @@ apply:
     command: ip -d address show
     textfsm: textfsm_templates/linux_ipaddr.tfsm
   
-  junos:
+  junos-qfx:
     version: all
     command: show interface | display json
     normalize: 'interface-information/[0]/physical-interface/*/[
@@ -68,7 +68,9 @@ apply:
     "logical-interface/[*]/if-config-flags: logicalIfflags",
     "logical-interface/[*]/address-family: afi",
     ]'
-    
+
+  junos-mx:
+    copy: junos-qfx
 
   nxos:
     version: all
@@ -109,4 +111,10 @@ apply:
         "admin-state: adminState",
         "TABLE_addr/ROW_addr/[*]?/addr: ip6AddressList",
         "linklocal-addr: _linklocal"
+        ]'
+
+      - command: show interface mac-address  | json
+        normalize: 'TABLE_interface/ROW_interface/*?/[
+        "interface: ifname",
+        "address: macaddr",
         ]'
