@@ -6,27 +6,27 @@ tests:
   output: '[{"namespace": "nxos", "hostname": "leaf1", "model": "Nexus9000 C9300v
     Chassis", "version": "9.3(4)", "vendor": "Cisco", "architecture": "Intel Core
     Processor (Skylake, IBRS)", "status": "alive", "address": "10.255.2.42", "uptime":
-    19814179, "timestamp": 1594213105179}, {"namespace": "nxos", "hostname": "leaf2",
+    23057994, "timestamp": 1597173310994}, {"namespace": "nxos", "hostname": "leaf2",
     "model": "Nexus9000 C9300v Chassis", "version": "9.3(4)", "vendor": "Cisco", "architecture":
     "Intel Core Processor (Skylake, IBRS)", "status": "alive", "address": "10.255.2.43",
-    "uptime": 19813179, "timestamp": 1594213105179}, {"namespace": "nxos", "hostname":
+    "uptime": 23062401, "timestamp": 1597173311401}, {"namespace": "nxos", "hostname":
     "server1", "model": "vm", "version": "18.04.3 LTS", "vendor": "Ubuntu", "architecture":
-    "x86-64", "status": "alive", "address": "10.255.2.176", "uptime": 48374654, "timestamp":
-    1594213101654}, {"namespace": "nxos", "hostname": "server2", "model": "vm", "version":
+    "x86-64", "status": "alive", "address": "10.255.2.176", "uptime": 26387819, "timestamp":
+    1597173308819}, {"namespace": "nxos", "hostname": "server2", "model": "vm", "version":
     "18.04.3 LTS", "vendor": "Ubuntu", "architecture": "x86-64", "status": "alive",
-    "address": "10.255.2.168", "uptime": 48380654, "timestamp": 1594213101654}, {"namespace":
+    "address": "10.255.2.168", "uptime": 26383819, "timestamp": 1597173308819}, {"namespace":
     "nxos", "hostname": "server3", "model": "vm", "version": "18.04.3 LTS", "vendor":
     "Ubuntu", "architecture": "x86-64", "status": "alive", "address": "10.255.2.100",
-    "uptime": 48376667, "timestamp": 1594213101667}, {"namespace": "nxos", "hostname":
+    "uptime": 26385713, "timestamp": 1597173308713}, {"namespace": "nxos", "hostname":
     "server4", "model": "vm", "version": "18.04.3 LTS", "vendor": "Ubuntu", "architecture":
-    "x86-64", "status": "alive", "address": "10.255.2.14", "uptime": 48376654, "timestamp":
-    1594213101654}, {"namespace": "nxos", "hostname": "spine1", "model": "Nexus9000
+    "x86-64", "status": "alive", "address": "10.255.2.14", "uptime": 26384820, "timestamp":
+    1597173308820}, {"namespace": "nxos", "hostname": "spine1", "model": "Nexus9000
     C9300v Chassis", "version": "9.3(4)", "vendor": "Cisco", "architecture": "Intel
     Core Processor (Skylake, IBRS)", "status": "alive", "address": "10.255.2.44",
-    "uptime": 48352982, "timestamp": 1594213104982}, {"namespace": "nxos", "hostname":
+    "uptime": 26360401, "timestamp": 1597173311401}, {"namespace": "nxos", "hostname":
     "spine2", "model": "Nexus9000 C9300v Chassis", "version": "9.3(4)", "vendor":
     "Cisco", "architecture": "Intel Core Processor (Skylake, IBRS)", "status": "alive",
-    "address": "10.255.2.45", "uptime": 48346982, "timestamp": 1594213104982}]'
+    "address": "10.255.2.45", "uptime": 26357401, "timestamp": 1597173311401}]'
 - command: device show --columns=hostname --format=json
   data-directory: tests/data/nxos/parquet-out/
   marks: device show nxos
@@ -37,9 +37,9 @@ tests:
   data-directory: tests/data/nxos/parquet-out/
   marks: device summarize nxos
   output: '{"nxos": {"deviceCnt": 8, "vendorCnt": {"Cisco": 4, "Ubuntu": 4}, "modelCnt":
-    {"Nexus9000 C9300v Chassis": 4, "vm": 4}, "archCnt": {"x86-64": 4, "Intel Core
-    Processor (Skylake, IBRS)": 4}, "versionCnt": {"9.3(4)": 4, "18.04.3 LTS": 4},
-    "upTimeStat": [19813179, 48380654, 48363818]}}'
+    {"vm": 4, "Nexus9000 C9300v Chassis": 4}, "archCnt": {"x86-64": 4, "Intel Core
+    Processor (Skylake, IBRS)": 4}, "versionCnt": {"18.04.3 LTS": 4, "9.3(4)": 4},
+    "upTimeStat": [23057994, 26387819, 26372110]}}'
 - command: device summarize --columns="namespace hostname" --format=json
   data-directory: tests/data/nxos/parquet-out/
   error:

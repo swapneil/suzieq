@@ -1,49 +1,49 @@
 [
     {
         "status": 0,
-        "timestamp": 1594213101373,
-        "cmd": "cat /proc/net/dev",
-        "devtype": "linux",
-        "namespace": "nxos",
-        "hostname": "server4",
-        "address": "10.255.2.14",
-        "version": "18.04",
-        "data": "Inter-|   Receive                                                |  Transmit\n face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed\n    lo:   20116     256    0    0    0     0          0         0    20116     256    0    0    0     0       0          0\n  eth1:  607253   10088    0 10082    0     0          0         0     1426      19    0    0    0     0       0          0\n  eth0: 2992185   29086    0 27413    0     0          0         0   222417    1415    0    0    0     0       0          0\n"
-    }
-][
-    {
-        "status": 0,
-        "timestamp": 1594213101374,
-        "cmd": "cat /proc/net/dev",
-        "devtype": "linux",
-        "namespace": "nxos",
-        "hostname": "server2",
-        "address": "10.255.2.168",
-        "version": "18.04",
-        "data": "Inter-|   Receive                                                |  Transmit\n face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed\n    lo:   19228     244    0    0    0     0          0         0    19228     244    0    0    0     0       0          0\n  eth0: 3002249   29109    0 27415    0     0          0         0   227571    1450    0    0    0     0       0          0\n  eth1:  607433   10091    0 10085    0     0          0         0     1426      19    0    0    0     0       0          0\n"
-    }
-][
-    {
-        "status": 0,
-        "timestamp": 1594213101374,
+        "timestamp": 1597173308607,
         "cmd": "cat /proc/net/dev",
         "devtype": "linux",
         "namespace": "nxos",
         "hostname": "server1",
         "address": "10.255.2.176",
         "version": "18.04",
-        "data": "Inter-|   Receive                                                |  Transmit\n face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed\n  eth0: 2990266   29098    0 27412    0     0          0         0   222123    1418    0    0    0     0       0          0\n    lo:   20164     256    0    0    0     0          0         0    20164     256    0    0    0     0       0          0\n  eth1:  607433   10091    0 10085    0     0          0         0     1426      19    0    0    0     0       0          0\n"
+        "data": "Inter-|   Receive                                                |  Transmit\n face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed\n    lo:    8414     107    0    0    0     0          0         0     8414     107    0    0    0     0       0          0\n  eth0: 1981747   16288    0 14953    0     0          0         0   154979    1171    0    0    0     0       0          0\n  eth1:  779934   12997    0 12991    0     0          0         0     2826      41    0    0    0     0       0          0\n"
     }
 ][
     {
         "status": 0,
-        "timestamp": 1594213101377,
+        "timestamp": 1597173308607,
         "cmd": "cat /proc/net/dev",
         "devtype": "linux",
         "namespace": "nxos",
         "hostname": "server3",
         "address": "10.255.2.100",
         "version": "18.04",
-        "data": "Inter-|   Receive                                                |  Transmit\n face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed\n  eth1:  590100    9834    0 9832    0     0          0         0     1426      19    0    0    0     0       0          0\n  eth0: 3002684   29152    0 27413    0     0          0         0   222559    1418    0    0    0     0       0          0\n    lo:   20520     260    0    0    0     0          0         0    20520     260    0    0    0     0       0          0\n"
+        "data": "Inter-|   Receive                                                |  Transmit\n face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed\n  eth0: 1964968   16241    0 14951    0     0          0         0   144642    1064    0    0    0     0       0          0\n  eth1:  779978   12999    0 12992    0     0          0         0     2336      32    0    0    0     0       0          0\n    lo:    7616     100    0    0    0     0          0         0     7616     100    0    0    0     0       0          0\n"
+    }
+][
+    {
+        "status": 0,
+        "timestamp": 1597173308611,
+        "cmd": "cat /proc/net/dev",
+        "devtype": "linux",
+        "namespace": "nxos",
+        "hostname": "server2",
+        "address": "10.255.2.168",
+        "version": "18.04",
+        "data": "Inter-|   Receive                                                |  Transmit\n face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed\n    lo:    8392     108    0    0    0     0          0         0     8392     108    0    0    0     0       0          0\n  eth1:  779738   12995    0 12991    0     0          0         0     2308      32    0    0    0     0       0          0\n  eth0: 1987094   16374    0 14950    0     0          0         0   163887    1239    0    0    0     0       0          0\n"
+    }
+][
+    {
+        "status": 0,
+        "timestamp": 1597173308623,
+        "cmd": "cat /proc/net/dev",
+        "devtype": "linux",
+        "namespace": "nxos",
+        "hostname": "server4",
+        "address": "10.255.2.14",
+        "version": "18.04",
+        "data": "Inter-|   Receive                                                |  Transmit\n face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed\n    lo:    7992     104    0    0    0     0          0         0     7992     104    0    0    0     0       0          0\n  eth1:  779956   12998    0 12992    0     0          0         0     2686      37    0    0    0     0       0          0\n  eth0: 1981569   16324    0 14951    0     0          0         0   153221    1151    0    0    0     0       0          0\n"
     }
 ]

@@ -7,21 +7,7 @@ import ipaddress
 class OspfIfService(Service):
     """OSPF Interface service. Output needs to be munged"""
 
-    def clean_data(self, processed_data, raw_data):
-
-        dev_type = self._get_devtype_from_input(raw_data)
-        if dev_type == "cumulus" or dev_type == "linux":
-            processed_data = self._clean_cumulus_data(processed_data, raw_data)
-        elif dev_type == "eos":
-            processed_data = self._clean_eos_data(processed_data, raw_data)
-        elif dev_type == "junos":
-            processed_data = self._clean_junos_data(processed_data, raw_data)
-        elif dev_type == "nxos":
-            processed_data = self._clean_nxos_data(processed_data, raw_data)
-
-        return super().clean_data(processed_data, raw_data)
-
-    def _clean_cumulus_data(self, processed_data, raw_data):
+    def _clean_linux_data(self, processed_data, raw_data):
         for entry in processed_data:
             entry["vrf"] = "default"
             entry["networkType"] = entry["networkType"].lower()
@@ -32,6 +18,9 @@ class OspfIfService(Service):
             entry['origIfname'] = entry['ifname']
 
         return processed_data
+
+    def _clean_cumulus_data(self, processed_data, raw_data):
+        return self._clean_linux_data(processed_data, raw_data)
 
     def _clean_eos_data(self, processed_data, raw_data):
         for entry in processed_data:
@@ -51,6 +40,8 @@ class OspfIfService(Service):
                 continue
 
             entry['routerId'] = routerId
+            # Is this right? Don't have a down interface example
+            entry['state'] = 'up'
             entry['passive'] = entry['passive'] == "Passive"
             if entry['networkType'] == "LAN":
                 entry['networkType'] = "broadcast"
@@ -64,6 +55,7 @@ class OspfIfService(Service):
             # Rewrite '/' in interface names
             entry['ifname'] = entry['ifname'].replace('/', '-')
 
+        # Skip the original record as we don't need the overview record
         return processed_data[1:]
 
     def _clean_nxos_data(self, processed_data, raw_data):

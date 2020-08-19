@@ -92,7 +92,7 @@ class SqPandasEngine(SqEngine):
 
         # Create the filter to select only specified columns
         addnl_filter = kwargs.pop('add_filter', None)
-        query_str = build_query_str(key_fields, **kwargs)
+        query_str = build_query_str(key_fields, sch, **kwargs)
 
         # Add the ignored fields back to key fields to ensure we
         # do the drop_duplicates correctly below incl reading reqd cols
@@ -171,7 +171,7 @@ class SqPandasEngine(SqEngine):
             fields.remove('active')
 
         final_df = df_timestamp_to_datetime(final_df)
-
+        fields = set(fields).intersection(set(final_df.columns))
         if sort_fields and all(x in sort_fields for x in fields):
             return final_df[fields].sort_values(by=sort_fields)
         else:

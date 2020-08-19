@@ -20,21 +20,11 @@ class RoutesService(Service):
         else:
             entry['ipvers'] = 4
 
-    def clean_data(self, processed_data, raw_data):
+    def _common_data_cleaner(self, processed_data, raw_data):
+        for entry in processed_data:
+            self._fix_ipvers(entry)
 
-        devtype = self._get_devtype_from_input(raw_data)
-        if any([devtype == x for x in ["cumulus", "linux"]]):
-            processed_data = self._clean_linux_data(processed_data, raw_data)
-        elif devtype == "junos":
-            processed_data = self._clean_junos_data(processed_data, raw_data)
-        elif devtype == "nxos":
-            processed_data = self._clean_nxos_data(processed_data, raw_data)
-        else:
-            # Fix IP version for all entries
-            for entry in processed_data:
-                self._fix_ipvers(entry)
-
-        return super().clean_data(processed_data, raw_data)
+        return processed_data
 
     def _clean_linux_data(self, processed_data, raw_data):
         """Clean Linux ip route data"""
@@ -66,6 +56,9 @@ class RoutesService(Service):
 
         return processed_data
 
+    def _clean_cumulus_data(self, processed_data, raw_data):
+        return self._clean_linux_data(processed_data, raw_data)
+
     def _clean_junos_data(self, processed_data, raw_data):
         """Clean VRF name in JUNOS data"""
 
@@ -88,21 +81,18 @@ class RoutesService(Service):
             entry['vrf'] = vrf
             entry['ipvers'] = vers
 
-            if entry['localif']:
-                entry['oifs'] = [entry['localif']]
+            if entry['_localif']:
+                entry['oifs'] = [entry['_localif']]
 
             entry['protocol'] = entry['protocol'].lower()
             if entry['_rtlen'] != 0:
                 drop_entries_idx.append(i)
 
-            if entry['activeTag'] == '*':
-                entry['active'] = True
-            else:
-                entry['active'] = False
+            entry['active'] = entry['_activeTag'] == '*'
 
             entry['metric'] = int(entry['metric'])
-            entry.pop('localif')
-            entry.pop('activeTag')
+            entry.pop('_localif')
+            entry.pop('_activeTag')
 
         processed_data = np.delete(processed_data,
                                    drop_entries_idx).tolist()
@@ -129,6 +119,13 @@ class RoutesService(Service):
                         oif = oif.replace('Eth', 'Ethernet')
                     oiflist.append(oif)
             entry['oifs'] = oiflist
+
+            if not entry['oifs']:
+                oiflist = []
+                for nhv in entry.get('_nexthopVrf', []):
+                    if nhv:
+                        oiflist.append(f'_nexthopVrf:{nhv}')
+                entry['oifs'] = oiflist
 
             self._fix_ipvers(entry)
             if 'action' not in entry:

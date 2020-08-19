@@ -1,5 +1,4 @@
 import os
-import sys
 import asyncio
 from datetime import datetime
 import time
@@ -11,12 +10,11 @@ from tempfile import mkstemp
 from dataclasses import dataclass
 from http import HTTPStatus
 from collections import defaultdict
-from itertools import zip_longest
 
 import pyarrow as pa
 
 from suzieq.poller.services.svcparser import cons_recs_from_json_template
-from typing import List
+from suzieq.utils import known_devtypes
 
 HOLD_TIME_IN_MSECS = 60000  # How long b4 declaring node dead
 
@@ -95,7 +93,18 @@ class Service(object):
         else:
             self.partition_cols = self.keys + ["timestamp"]
 
-    @staticmethod
+        # Setup dictionary of NOS specific extracted data cleaners
+        self.dev_clean_fn = {}
+        common_dev_clean_fn = getattr(self, '_common_data_cleaner', None)
+        for x in known_devtypes():
+            if x.startswith('junos'):
+                dev = 'junos'
+            else:
+                dev = x
+            self.dev_clean_fn[x] = getattr(
+                self, f'_clean_{dev}_data', None) or common_dev_clean_fn
+
+    @ staticmethod
     def is_status_ok(status: int) -> bool:
         if status == 0 or status == HTTPStatus.OK:
             return True
@@ -324,12 +333,14 @@ class Service(object):
                     if not tfsm_template:
                         return result
 
-                    if "output" in data["data"]:
-                        in_info = data["data"]["output"]
-                    elif "messages" in data["data"]:
-                        # This is Arista's bash output format
-                        in_info = data["data"]["messages"][0]
-                    else:
+                    in_info = []
+                    if isinstance(data['data'], dict):
+                        if "output" in data["data"]:
+                            in_info = data["data"]["output"]
+                        elif "messages" in data["data"]:
+                            # This is Arista's bash output format
+                            in_info = data["data"]["messages"][0]
+                    if not in_info:
                         in_info = data["data"]
                     # Clean data is invoked inside this due to the way we
                     # munge the data and force the types to adhere to the
@@ -401,6 +412,22 @@ class Service(object):
             return input.get('devtype', None)
 
     def clean_data(self, processed_data, raw_data):
+        """Massage the extracted data to match record specified by schema"""
+
+        dev_clean_fn = self.dev_clean_fn.get(self._get_devtype_from_input(
+            raw_data), None)
+        if dev_clean_fn:
+            processed_data = dev_clean_fn(processed_data, raw_data)
+
+        return self.clean_data_common(processed_data, raw_data)
+
+    def clean_data_common(self, processed_data, raw_data):
+        """Fix the type and default value of of each extracted field
+
+        This routine is common to all services. It ensures that all the missing
+        fields, as defined by the schema, are added to the records extracted.
+        Furthermore, each field is set to the specified type.
+        """
 
         # Build default data structure
         schema_rec = {}
@@ -598,6 +625,8 @@ class Service(object):
                         self._post_work_to_writer(json.dumps(output, indent=4))
                     total_nodes -= 1
                     if total_nodes <= 0:
+                        self.logger.warning(
+                            f'Service: {self.name}: Finished gathering data')
                         return
                     continue
 
@@ -621,6 +650,13 @@ class Service(object):
                                        hostname)
                 empty_count = False
             else:
+                if self.run_once == "gather" or self.run_once == "process":
+                    total_nodes -= 1
+                    if total_nodes <= 0:
+                        self.logger.warning(
+                            f'Service: {self.name}: Finished gathering data')
+                        return
+                    continue
                 empty_count = True
 
             total_time = int(time.time()*1000) - token.start_time
